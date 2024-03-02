@@ -6,17 +6,22 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @Entity
-@Table(name = "users")
-public class UserEntity {
+@Table(name = "interaction_parking_place")
+public class InteractionParkingPlaceEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String name;
-    private String surname;
+
+    @ManyToOne
+    private UserEntity user;
+
+    @ManyToOne
+    private ParkingPlaceEntity parkingPlace;
+
+
 }

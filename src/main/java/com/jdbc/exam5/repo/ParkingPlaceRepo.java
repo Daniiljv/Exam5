@@ -1,8 +1,6 @@
 package com.jdbc.exam5.repo;
 
-import com.jdbc.exam5.dtos.ParkingPlaceDto;
-import com.jdbc.exam5.enams.ParkingType;
-import com.jdbc.exam5.enams.Status;
+import com.jdbc.exam5.enums.ParkingType;
 import com.jdbc.exam5.entities.ParkingPlaceEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -13,12 +11,16 @@ import java.util.List;
 
 public interface ParkingPlaceRepo extends JpaRepository<ParkingPlaceEntity, Long> {
  @Query("select p from ParkingPlaceEntity p " +
-         "where status = :status")
-    List<ParkingPlaceEntity> findAllNotReserved(@Param("status")Status status);
+         "where p.status = com.jdbc.exam5.enums.Status.AVAILABLE")
+    List<ParkingPlaceEntity> findAllAvailablePlaces();
 
  @Query("select p from ParkingPlaceEntity p " +
-         "where p.parkingType = :type ")
-    List<ParkingPlaceEntity> findParkingPlaceByType(@Param("type")ParkingType type);
+         "where p.parkingType = :type " +
+         "and p.status = com.jdbc.exam5.enums.Status.AVAILABLE")
+    List<ParkingPlaceEntity> findAvailableParkingPlaceByType(@Param("type")ParkingType type);
 
+ @Query("select p from  ParkingPlaceEntity p " +
+         "where p.status = com.jdbc.exam5.enums.Status.AVAILABLE and p.id = :id")
+    ParkingPlaceEntity findAvailablePlaceById(@Param("id")Long id);
 
 }

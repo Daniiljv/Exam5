@@ -1,10 +1,13 @@
 package com.jdbc.exam5.services.impl;
 
+import com.jdbc.exam5.dtos.CreateUserDto;
 import com.jdbc.exam5.dtos.UserDto;
 import com.jdbc.exam5.entities.UserEntity;
+import com.jdbc.exam5.repo.InteractionParkingPlaceRepo;
 import com.jdbc.exam5.repo.UserRepo;
 import com.jdbc.exam5.services.UserService;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -16,18 +19,17 @@ import java.util.List;
 public class UserServiceImpl implements UserService {
 
     private final UserRepo repo;
+    private final InteractionParkingPlaceRepo interactionParkingPlaceRepo;
     @Override
-    public UserDto create(UserDto userToCreate) {
+    public CreateUserDto create(CreateUserDto userToCreate) throws RuntimeException{
         UserEntity userEntity = UserEntity.builder()
-                .id(userToCreate.getId())
                 .name(userToCreate.getName())
                 .surname(userToCreate.getSurname())
-                .parkingPlaces(userToCreate.getParkingPlaces())
                 .build();
         try{
             repo.save(userEntity);
         }catch (Exception e){
-            System.out.println(e.getMessage());
+            throw new RuntimeException();
         }
         return userToCreate;
     }
@@ -42,7 +44,6 @@ public class UserServiceImpl implements UserService {
                     .id(user.getId())
                     .name(user.getName())
                     .surname(user.getSurname())
-                    .parkingPlaces(user.getParkingPlaces())
                     .build();
             userDtoList.add(userDto);
         }
@@ -52,18 +53,21 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDto findById(Long id) {
         UserEntity userEntity = repo.findById(id)
-                .orElseThrow(()-> new EntityNotFoundException(""));
+                .orElseThrow(()-> new EntityNotFoundException("User is not found"));
 
         return UserDto.builder()
                 .id(userEntity.getId())
                 .name(userEntity.getName())
                 .surname(userEntity.getSurname())
-                .parkingPlaces(userEntity.getParkingPlaces())
                 .build();
     }
 
     @Override
+    @Transactional
     public void delete(Long id) {
-        repo.deleteById(id);
+        UserEntity user = repo.findById(id)
+                .orElseThrow(()-> new EntityNotFoundException("User is not found!"));
+        interactionParkingPlaceRepo.deleteUser(user);
+        repo.deleteById(user.getId());
     }
 }

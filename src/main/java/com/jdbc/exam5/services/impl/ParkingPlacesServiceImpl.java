@@ -1,12 +1,15 @@
 package com.jdbc.exam5.services.impl;
 
+import com.jdbc.exam5.dtos.CreateParkingPlaceDto;
 import com.jdbc.exam5.dtos.ParkingPlaceDto;
-import com.jdbc.exam5.enams.Status;
+import com.jdbc.exam5.enums.Status;
 import com.jdbc.exam5.entities.ParkingPlaceEntity;
+import com.jdbc.exam5.repo.InteractionParkingPlaceRepo;
 import com.jdbc.exam5.repo.ParkingPlaceRepo;
+import com.jdbc.exam5.enums.ParkingType;
 import com.jdbc.exam5.services.ParkingPlaceService;
-import com.jdbc.exam5.enams.ParkingType;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,11 +21,12 @@ import java.util.List;
 public class ParkingPlacesServiceImpl implements ParkingPlaceService {
 
     private final ParkingPlaceRepo repo;
+    private final InteractionParkingPlaceRepo interactionParkingPlaceRepo;
     @Override
     public List<ParkingPlaceDto> findAll() {
         List<ParkingPlaceEntity> parkingPlaceEntities = repo.findAll();
 
-        List<ParkingPlaceDto> parkingPlaceDtos = new ArrayList<>();
+        List<ParkingPlaceDto> parkingPlaceDtoList = new ArrayList<>();
         for(ParkingPlaceEntity parkingPlace : parkingPlaceEntities){
             ParkingPlaceDto parkingPlaceDto = ParkingPlaceDto.builder()
                     .id(parkingPlace.getId())
@@ -30,14 +34,15 @@ public class ParkingPlacesServiceImpl implements ParkingPlaceService {
                     .parkingType(parkingPlace.getParkingType())
                     .status(parkingPlace.getStatus())
                     .build();
-            parkingPlaceDtos.add(parkingPlaceDto);
+            parkingPlaceDtoList.add(parkingPlaceDto);
         }
-        return parkingPlaceDtos;
+        return parkingPlaceDtoList;
     }
 
     @Override
     public ParkingPlaceDto findById(Long id) {
-        ParkingPlaceEntity parkingPlaceEntity = repo.findById(id).orElseThrow(()->new EntityNotFoundException(""));
+        ParkingPlaceEntity parkingPlaceEntity = repo.findById(id)
+                .orElseThrow(()->new EntityNotFoundException("Parking place is not found"));
 
         return ParkingPlaceDto.builder()
                 .id(parkingPlaceEntity.getId())
@@ -48,10 +53,10 @@ public class ParkingPlacesServiceImpl implements ParkingPlaceService {
     }
 
     @Override
-    public List<ParkingPlaceDto> findNotReservedPlaces() {
-        List<ParkingPlaceEntity> parkingPlaceEntities = repo.findAllNotReserved(Status.IS_EMPTY);
+    public List<ParkingPlaceDto> findAllAvailablePlaces() {
+        List<ParkingPlaceEntity> parkingPlaceEntities = repo.findAllAvailablePlaces();
 
-        List<ParkingPlaceDto> parkingPlaceDtos = new ArrayList<>();
+        List<ParkingPlaceDto> parkingPlaceDtoList = new ArrayList<>();
         for(ParkingPlaceEntity parkingPlace : parkingPlaceEntities){
             ParkingPlaceDto parkingPlaceDto = ParkingPlaceDto.builder()
                     .id(parkingPlace.getId())
@@ -59,17 +64,17 @@ public class ParkingPlacesServiceImpl implements ParkingPlaceService {
                     .parkingType(parkingPlace.getParkingType())
                     .status(parkingPlace.getStatus())
                     .build();
-            parkingPlaceDtos.add(parkingPlaceDto);
+            parkingPlaceDtoList.add(parkingPlaceDto);
         }
-        return parkingPlaceDtos;
+        return parkingPlaceDtoList;
 
     }
 
     @Override
-    public List<ParkingPlaceDto> findPlacesByParkingType(ParkingType parkingType) {
-        List<ParkingPlaceEntity> parkingPlaceEntities = repo.findParkingPlaceByType(parkingType);
+    public List<ParkingPlaceDto> findAvailablePlacesByParkingType(ParkingType parkingType) {
+        List<ParkingPlaceEntity> parkingPlaceEntities = repo.findAvailableParkingPlaceByType(parkingType);
 
-        List<ParkingPlaceDto> parkingPlaceDtos = new ArrayList<>();
+        List<ParkingPlaceDto> parkingPlaceDtoList = new ArrayList<>();
         for(ParkingPlaceEntity parkingPlace : parkingPlaceEntities){
             ParkingPlaceDto parkingPlaceDto = ParkingPlaceDto.builder()
                     .id(parkingPlace.getId())
@@ -77,30 +82,31 @@ public class ParkingPlacesServiceImpl implements ParkingPlaceService {
                     .parkingType(parkingPlace.getParkingType())
                     .status(parkingPlace.getStatus())
                     .build();
-            parkingPlaceDtos.add(parkingPlaceDto);
+            parkingPlaceDtoList.add(parkingPlaceDto);
         }
-        return parkingPlaceDtos;
+        return parkingPlaceDtoList;
     }
 
     @Override
-    public ParkingPlaceDto create(ParkingPlaceDto parkingPlaceToCreate) {
-        ParkingPlaceEntity parkingPlaceEntity = ParkingPlaceEntity.builder()
-                .id(parkingPlaceToCreate.getId())
+    public CreateParkingPlaceDto create(CreateParkingPlaceDto parkingPlaceToCreate) throws RuntimeException{
+        try{ ParkingPlaceEntity parkingPlaceEntity = ParkingPlaceEntity.builder()
                 .spotNumber(parkingPlaceToCreate.getSpotNumber())
                 .parkingType(parkingPlaceToCreate.getParkingType())
-                .status(parkingPlaceToCreate.getStatus())
+                .status(Status.AVAILABLE)
                 .build();
-
-        try{
             repo.save(parkingPlaceEntity);
         }catch (Exception e){
-            System.out.println(e.getMessage());
+            throw new RuntimeException();
         }
         return parkingPlaceToCreate;
     }
 
+    @Transactional
     @Override
     public void delete(Long id) {
-        repo.deleteById(id);
+        ParkingPlaceEntity parkingPlace = repo.findById(id)
+                .orElseThrow(()-> new EntityNotFoundException("Parking place is not found"));
+        interactionParkingPlaceRepo.deleteParkingPlace(parkingPlace);
+        repo.deleteById(parkingPlace.getId());
     }
 }

@@ -1,4 +1,4 @@
-package com.jdbc.exam5.enams;
+package com.jdbc.exam5.enums;
 
 import lombok.AllArgsConstructor;
 

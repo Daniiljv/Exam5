@@ -1,7 +1,7 @@
 package com.jdbc.exam5.dtos;
 
-import com.jdbc.exam5.enums.ParkingType;
-import com.jdbc.exam5.enums.Status;
+import com.jdbc.exam5.entities.ParkingPlaceEntity;
+import com.jdbc.exam5.entities.UserEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,9 +11,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ParkingPlaceDto {
+public class InteractionParkingPlaceDto {
+
     private Long id;
-    private String spotNumber;
-    private ParkingType parkingType;
-    private Status status;
+    private UserEntity user;
+    private ParkingPlaceEntity parkingPlace;
+
 }
