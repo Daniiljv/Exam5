@@ -94,7 +94,8 @@ public class ParkingPlacesServiceImpl implements ParkingPlaceService {
                 .parkingType(parkingPlaceToCreate.getParkingType())
                 .status(Status.AVAILABLE)
                 .build();
-            repo.save(parkingPlaceEntity);
+            ParkingPlaceEntity entity = repo.save(parkingPlaceEntity);
+            parkingPlaceToCreate.setId(entity.getId());
         }catch (Exception e){
             throw new RuntimeException();
         }

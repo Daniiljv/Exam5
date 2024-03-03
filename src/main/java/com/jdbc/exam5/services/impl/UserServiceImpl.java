@@ -27,7 +27,8 @@ public class UserServiceImpl implements UserService {
                 .surname(userToCreate.getSurname())
                 .build();
         try{
-            repo.save(userEntity);
+            UserEntity entity = repo.save(userEntity);
+            userToCreate.setId(entity.getId());
         }catch (Exception e){
             throw new RuntimeException();
         }
